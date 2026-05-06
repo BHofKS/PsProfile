@@ -128,12 +128,11 @@ if (-not $obtained) {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $MasterUrl -OutFile $tmp -UseBasicParsing -ErrorAction Stop
-        $head = Get-Content $tmp -TotalCount 5 -ErrorAction Stop
-        $headJoined = ($head -join "`n")
-        if ($headJoined -match '(?i)^\s*(<!DOCTYPE|<html\b|<\?xml)') {
+        $body = Get-Content $tmp -Raw -ErrorAction Stop
+        if ($body -match '(?i)^\s*(<!DOCTYPE|<html\b|<\?xml)') {
             Write-Warning "Download returned an HTML/XML page (likely a login redirect). Discarding."
         }
-        elseif ($headJoined -notmatch '(?m)^\s*\$ProfileVersion\s*=') {
+        elseif ($body -notmatch '(?m)^\s*\$ProfileVersion\s*=') {
             Write-Warning "Download did not contain `$ProfileVersion -- not a valid profile. Discarding."
         }
         else {
