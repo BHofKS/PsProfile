@@ -2,7 +2,7 @@
 #requires -Version 5.1
 [CmdletBinding()]
 param(
-    [string]$MasterUrl = 'https://raw.githubusercontent.com/BHofKS/Work_dotfiles/main/windows_Microsoft.PowerShell_profile.ps1',
+    [string]$MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1',
     [string]$MasterPath  # Optional: skip download, use this local file instead
 )
 
@@ -146,7 +146,9 @@ if (-not $obtained) {
         Write-Warning "Download failed: $($_.Exception.Message)"
     }
     finally {
-        if (Test-Path $tmp) { Remove-Item $tmp -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tmp) {
+            Remove-Item $tmp -Force -ErrorAction SilentlyContinue 
+        }
     }
 }
 
