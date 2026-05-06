@@ -3,7 +3,9 @@
 [CmdletBinding()]
 param(
     [string]$MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1',
-    [string]$MasterPath  # Optional: skip download, use this local file instead
+    [string]$MasterPath,  # Optional: skip download, use this local file instead
+    [string]$TargetUserHome = $HOME,
+    [string]$TargetUserName = $env:USERNAME
 )
 
 $ErrorActionPreference = 'Stop'
