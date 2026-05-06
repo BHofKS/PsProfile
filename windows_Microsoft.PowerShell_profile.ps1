@@ -8,9 +8,9 @@ New-Alias 'dmg' disconnect-mggraph
 
 $PSDefaultParameterValues['Get-Help:full'] = $true
 
-$ProfileVersion = '2026050600'  # yyyymmdd##
+$ProfileVersion = '2026050601'  # yyyymmdd##
 
-$MasterUrl = 'https://raw.githubusercontent.com/BHofKS/Work_dotfiles/main/windows_Microsoft.PowerShell_profile.ps1'
+$MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1'
 
 # === Path resolution =====================================================
 $usersPath = 'C:\Users\bh1.users\'
