@@ -39,8 +39,8 @@ if ($whoami -like 'ADS\*') {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $upstream = (Invoke-WebRequest -Uri $MasterUrl -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop).Content
-        if ($upstream -match '(?i)<!DOCTYPE|<html|Sign in to your account') {
-            Write-Warning "Profile sync: upstream returned an HTML page (likely auth redirect) -- skipping update."
+        if ($upstream -match '(?i)^\s*(<!DOCTYPE|<html\b|<\?xml)') {
+            Write-Warning "Profile sync: upstream returned an HTML/XML page (likely auth redirect) -- skipping update."
         }
         elseif ($upstream -match '(?m)^\s*\$ProfileVersion\s*=\s*[''"](\d{10})[''"]') {
             $upstreamVersion = $Matches[1]
