@@ -8,7 +8,7 @@ New-Alias 'dmg' disconnect-mggraph
 
 $PSDefaultParameterValues['Get-Help:full'] = $true
 
-$ProfileVersion = '2026050601'  # yyyymmdd##
+$ProfileVersion = '2026052000'  # yyyymmdd##
 
 $MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1'
 
@@ -260,6 +260,39 @@ function pmp {
 function pow {
     #shortcut to the Powershell folder
     Set-Location -Path "$homePath/Source/ksuAdminTools/Powershell"
+}
+
+function privroles {
+    # Run the priv role snapshot against all the main subscriptions
+    $SubscriptionsToCheck = @(
+        "6689b6be-f394-49e8-ae90-8d03cc52df14", #Core-AZR
+        "15542549-c273-417f-a618-8174ed38ccf6", #CBA-AVD
+        "11a208b1-790a-44b4-b156-ec72dffedb0d", #IT-Dev
+        "6367e0c7-3913-4f32-b355-fc08bb2cc9cc", #IT-Prod
+        "cb98cdba-fb5d-4ce5-b720-33220ef3e444", #Research-CUI
+        "4865ea40-9a62-495f-8e78-e9845cae044a", #Rise - Main Campus
+        "72108ccd-aab2-444f-a9dd-b057e689f377", #Salina-IT-Prod
+        "2b1dc142-a71e-4a28-a515-b07d9333ce16"  #VetMed Beef Cattle Institute
+    )
+
+    if ($PSVersionTable.Platform -eq 'Unix') {
+        $hostname = scutil --get LocalHostName
+    }
+    else {
+        $hostname = [System.Net.Dns]::GetHostName()
+    }
+
+    $thumbprints = @{
+        'bh1-admin-windows' = '1B3F6ED81BCAEB8C79BCD09CCD8D141831C9ACF3'
+        'KSU-IT-BH1-AIR' = '67C74410AA142E00D3E5F14CB7D94B89001978AE'
+    }
+    $thumb = $thumbprints[$hostname]
+    
+    if (-not $thumb) {
+        throw "No thumbprint found for hostname: $env:COMPUTERNAME"
+    }
+
+    Invoke-KsuPrivilegedRoleSnapshot -TenantId 'd9a2fa71-d67d-4cb6-b541-06ccaa8013fb' -ClientId 'f45a1096-c735-479a-a992-19828a670dd5' -CertificateThumbprint $thumb -Organization 'ksuemailprod.onmicrosoft.com' -BusinessHours -SubscriptionId $SubscriptionsToCheck
 }
 
 function proj {
