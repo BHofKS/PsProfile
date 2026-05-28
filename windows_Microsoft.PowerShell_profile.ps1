@@ -8,7 +8,7 @@ New-Alias 'dmg' disconnect-mggraph
 
 $PSDefaultParameterValues['Get-Help:full'] = $true
 
-$ProfileVersion = '2026052800'  # yyyymmdd##
+$ProfileVersion = '2026052801'  # yyyymmdd##
 
 $MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1'
 
