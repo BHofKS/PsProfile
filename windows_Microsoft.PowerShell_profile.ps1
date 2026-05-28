@@ -294,7 +294,7 @@ function privroles {
 
     if (-not (Get-Module -Name 'KsuEntraPrivilegedRoles')) {
         Write-Output 'Importing module KsuEntraPrivilegedRoles...'
-        Import-Module $homePathSource/KsuEntraPrivilegedRoles/KsuEntraPrivilegedRoles.psd1
+        Import-Module $homePath/Source/KsuEntraPrivilegedRoles/KsuEntraPrivilegedRoles.psd1
     }
 
     Invoke-KsuPrivilegedRoleSnapshot -TenantId 'd9a2fa71-d67d-4cb6-b541-06ccaa8013fb' -ClientId 'f45a1096-c735-479a-a992-19828a670dd5' -CertificateThumbprint $thumb -Organization 'ksuemailprod.onmicrosoft.com' -BusinessHours -SubscriptionId $SubscriptionsToCheck -OutputPath $homePath/Source/PrivRoleReports -Interactive
