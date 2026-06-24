@@ -14,7 +14,18 @@ $ErrorActionPreference = 'Stop'
 $id = [Security.Principal.WindowsIdentity]::GetCurrent()
 $pr = New-Object Security.Principal.WindowsPrincipal($id)
 if (-not $pr.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    throw "Run this from an ELEVATED PowerShell session."
+    if (-not $PSCommandPath) {
+        throw "Not elevated and script path is unknown (run from a saved .ps1) -- cannot self-elevate."
+    }
+    Write-Host "Not elevated -- relaunching as administrator (RunAs) ..." -ForegroundColor Yellow
+    $exe = (Get-Process -Id $PID).Path  # current powershell.exe / pwsh.exe
+    $argList = @('-NoExit', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"")
+    foreach ($kv in $PSBoundParameters.GetEnumerator()) {
+        $argList += "-$($kv.Key)"
+        $argList += "`"$($kv.Value)`""
+    }
+    Start-Process -FilePath $exe -ArgumentList $argList -Verb RunAs
+    return
 }
 if ($id.Name -notlike 'ADS\*') {
     throw "Run this as your ADS account (currently: $($id.Name))."
