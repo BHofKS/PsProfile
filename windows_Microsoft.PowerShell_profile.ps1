@@ -1,14 +1,6 @@
-New-Alias 'cips' Connect-IPPSSession
-New-Alias 'caad' connect-azuread
-New-Alias 'cmso' connect-msolservice
-New-Alias 'ct' connect-microsoftteams
-New-Alias 'caz' connect-azaccount
-New-Alias 'cl' clear-host
-New-Alias 'dmg' disconnect-mggraph
-
 $PSDefaultParameterValues['Get-Help:full'] = $true
 
-$ProfileVersion = '2026081100'  # yyyymmdd##
+$ProfileVersion = '2026081101'  # yyyymmdd##
 
 $MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1'
 
@@ -33,6 +25,7 @@ $allProfiles = @(
 )
 
 $whoami = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+$profileUpdated = $false
 
 # Step 1: ADS sessions fetch upstream and update primary if a newer version exists
 if ($whoami -like 'ADS\*') {
@@ -61,7 +54,17 @@ if ($whoami -like 'ADS\*') {
                     New-Item -ItemType Directory -Path $parent -Force | Out-Null 
                 }
                 Set-Content -Path $primaryProfile -Value $upstream -NoNewline -Encoding UTF8
-                Write-Output "Profile sync: primary updated $ProfileVersion -> $upstreamVersion"
+
+                # Confirm the write landed before flagging a relaunch. If the file on disk still
+                # reads as the old version, every new window would update-and-relaunch forever.
+                $written = Get-Content $primaryProfile -Raw -ErrorAction SilentlyContinue
+                if ($written -match '(?m)^\s*\$ProfileVersion\s*=\s*[''"](\d{10})[''"]' -and $Matches[1] -eq $upstreamVersion) {
+                    $profileUpdated = $true
+                    Write-Output "Profile sync: primary updated $ProfileVersion -> $upstreamVersion"
+                }
+                else {
+                    Write-Warning "Profile sync: primary did not verify as $upstreamVersion after write -- not relaunching."
+                }
 
                 # Prune backups, keep newest 5 by version
                 $backups = Get-ChildItem -Path $backupDir -Filter 'profile-*.ps1' -File -ErrorAction SilentlyContinue |
@@ -123,8 +126,23 @@ if (Test-Path $referenceFile) {
     }
     Remove-Variable refHash, writable, p, needsUpdate, item, parent -ErrorAction SilentlyContinue
 }
-Remove-Variable allProfiles, primaryProfile, referenceFile, whoami, upstream, upstreamVersion `
-    -ErrorAction SilentlyContinue
+
+# Step 3: this session already loaded the old profile, so open a fresh window running the new
+# one. Started from the current ADS session, the child inherits this token -- no password
+# prompt, even though the desktop is logged on as users\bh1. Interactive consoles only.
+if ($profileUpdated -and [Environment]::UserInteractive -and $Host.Name -eq 'ConsoleHost') {
+    try {
+        $exe = (Get-Process -Id $PID).Path
+        Start-Process -FilePath $exe
+        Write-Output "Profile sync: opened a new window on the updated profile -- this one is still running $ProfileVersion."
+    }
+    catch {
+        Write-Warning "Profile sync: could not open a new window -- $_"
+    }
+}
+
+Remove-Variable allProfiles, primaryProfile, referenceFile, whoami, upstream, upstreamVersion, `
+    profileUpdated, written, exe -ErrorAction SilentlyContinue
 # =========================================================================
 
 Set-Location $homePath
@@ -359,7 +377,16 @@ function wsus {
     # Open WSUS management
     Start-Process "C:\Program Files\Update Services\AdministrationSnapin\wsus.msc" -Verb runas
 }
-#
+
+# === Aliases =============================================================
+New-Alias 'cips' Connect-IPPSSession
+New-Alias 'caad' connect-azuread
+New-Alias 'cmso' connect-msolservice
+New-Alias 'ct' connect-microsoftteams
+New-Alias 'caz' connect-azaccount
+New-Alias 'cl' clear-host
+New-Alias 'dmg' disconnect-mggraph
+
 # === Local server-specific profile =======================================
 # Server-specific functions/aliases live in $env:LocalProfile.
 # Sourced last so it can override anything defined above.
