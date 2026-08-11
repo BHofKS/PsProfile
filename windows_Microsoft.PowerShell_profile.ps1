@@ -160,6 +160,11 @@ function dce {
     Disconnect-ExchangeOnline -Confirm:$false
 }
 
+function diskm {
+    # Open Disk Management UI
+    Start-Process "C:\Windows\system32\diskmgmt.msc" -Verb runas
+}
+
 function dl {
     #shortcut to the Downloads folder
     Set-Location -Path $homePath/Downloads
