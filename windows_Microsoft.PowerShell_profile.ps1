@@ -1,6 +1,6 @@
 $PSDefaultParameterValues['Get-Help:full'] = $true
 
-$ProfileVersion = '2026081101'  # yyyymmdd##
+$ProfileVersion = '2026081102'  # yyyymmdd##
 
 $MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1'
 
@@ -223,6 +223,38 @@ function explore {
     Start-Process -Verb runas explorer.exe
 }
 
+function failed {
+    # Failed logons (Security event 4625) from the last N hours -- needs an elevated session
+    param([int]$Hours = 24)
+    try {
+        Get-WinEvent -FilterHashtable @{
+            LogName   = 'Security'
+            Id        = 4625
+            StartTime = (Get-Date).AddHours(-$Hours)
+        } -ErrorAction Stop |
+            Select-Object TimeCreated,
+                @{n = 'Account'; e = { $_.Properties[5].Value } },
+                @{n = 'Workstation'; e = { $_.Properties[13].Value } },
+                @{n = 'SourceIP'; e = { $_.Properties[19].Value } },
+                @{n = 'LogonType'; e = { $_.Properties[10].Value } } |
+            Format-Table -AutoSize
+    }
+    catch {
+        if ($_.Exception.Message -match 'No events were found') {
+            Write-Output "No failed logons in the last $Hours hours."
+        }
+        else {
+            Write-Warning "Could not read the Security log (elevated session required?) -- $($_.Exception.Message)"
+        }
+    }
+}
+
+function flushdns {
+    # Clear the local DNS resolver cache
+    Clear-DnsClientCache
+    Write-Output 'DNS client cache cleared.'
+}
+
 function forest {
     # Open MMC that has the Active Directory components
     Start-Process $homePath\Documents\AdminKit\ForestManagement.msc
@@ -250,8 +282,8 @@ function iis {
 }
 
 function la {
-    # equivalent of ls -al
-    ls -Force -Attributes
+    # equivalent of ls -al -- long listing including hidden and system items
+    Get-ChildItem -Force | Format-Table -AutoSize
 }
 
 function local {
@@ -273,6 +305,34 @@ function mmc {
 function od {
     #shortcut to the Onedrive folder
     Set-Location -Path "$homePath/OneDriveKSU/"
+}
+
+function pending {
+    # Report whether this server is waiting on a reboot, and why
+    $reasons = @()
+    if (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending') {
+        $reasons += 'Component Based Servicing'
+    }
+    if (Test-Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired') {
+        $reasons += 'Windows Update'
+    }
+    $sm = Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager' `
+        -Name PendingFileRenameOperations -ErrorAction SilentlyContinue
+    if ($sm.PendingFileRenameOperations) {
+        $reasons += 'Pending file rename'
+    }
+    $active = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName\ActiveComputerName').ComputerName
+    $configured = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName').ComputerName
+    if ($active -ne $configured) {
+        $reasons += "Pending rename ($active -> $configured)"
+    }
+
+    if ($reasons) {
+        Write-Warning "Reboot pending on ${env:COMPUTERNAME}: $($reasons -join '; ')"
+    }
+    else {
+        Write-Output "No reboot pending on $env:COMPUTERNAME."
+    }
 }
 
 function pmp {
@@ -328,14 +388,15 @@ function proj {
     Set-Location -Path "$homePath/OneDriveKSU/HCO/Projects"
 }
 
-function rd {
+function rdp {
     #Start Remote Desktop
-    Start-Process -Path "C:\Windows\system32\mstsc.exe"
+    Start-Process -FilePath "C:\Windows\system32\mstsc.exe"
 }
 
 function restart {
     # Restart for updates
-    Start-Process "C:\Windows\system32\cmd.exe /c "shutdown /g /d p:00:00 /c "Restart for updates" /t 0"" -Verb runas
+    Start-Process -FilePath "C:\Windows\system32\shutdown.exe" `
+        -ArgumentList '/g /d p:00:00 /c "Restart for updates" /t 0' -Verb runas
 }
 
 function runas {
