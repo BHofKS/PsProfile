@@ -1,6 +1,6 @@
 $PSDefaultParameterValues['Get-Help:full'] = $true
 
-$ProfileVersion = '2026081102'  # yyyymmdd##
+$ProfileVersion = '2026081103'  # yyyymmdd##
 
 $MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1'
 
@@ -129,12 +129,13 @@ if (Test-Path $referenceFile) {
 
 # Step 3: this session already loaded the old profile, so open a fresh window running the new
 # one. Started from the current ADS session, the child inherits this token -- no password
-# prompt, even though the desktop is logged on as users\bh1. Interactive consoles only.
+# prompt, even though the desktop is logged on as users\bh1. Always Windows PowerShell, which
+# is where the primary lives, whichever host ran the update. Interactive consoles only.
 if ($profileUpdated -and [Environment]::UserInteractive -and $Host.Name -eq 'ConsoleHost') {
     try {
-        $exe = (Get-Process -Id $PID).Path
+        $exe = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
         Start-Process -FilePath $exe
-        Write-Output "Profile sync: opened a new window on the updated profile -- this one is still running $ProfileVersion."
+        Write-Output "Profile sync: opened a new Windows PowerShell window on the updated profile -- this one is still running $ProfileVersion."
     }
     catch {
         Write-Warning "Profile sync: could not open a new window -- $_"
@@ -422,6 +423,11 @@ function sscm {
 function ssms {
     # Start SQL Server Management Studio
     Start-Process "ssms.exe" -Verb runas
+}
+
+function taskm {
+    # Open Task Manager as admin
+    Start-Process "C:\Windows\system32\Taskmgr.exe" -Verb runas
 }
 
 function tasks {
