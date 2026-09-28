@@ -158,6 +158,11 @@ function ce {
     Connect-ExchangeOnline -LoadCmdletHelp
 }
 
+function certlm {
+    # Open Computer Management UI as admin
+    Start-Process "c:\windows\system32\certlm.msc" -Verb runas
+}
+
 function cleanwsus {
     # run cleanup operation on hco-wsus
     $server = Get-WsusServer -PortNumber 80 -Name "hco-wsus-p-app1.ads.ksu.edu"
@@ -229,15 +234,15 @@ function failed {
     param([int]$Hours = 24)
     try {
         Get-WinEvent -FilterHashtable @{
-            LogName   = 'Security'
-            Id        = 4625
+            LogName = 'Security'
+            Id = 4625
             StartTime = (Get-Date).AddHours(-$Hours)
         } -ErrorAction Stop |
             Select-Object TimeCreated,
-                @{n = 'Account'; e = { $_.Properties[5].Value } },
-                @{n = 'Workstation'; e = { $_.Properties[13].Value } },
-                @{n = 'SourceIP'; e = { $_.Properties[19].Value } },
-                @{n = 'LogonType'; e = { $_.Properties[10].Value } } |
+            @{n = 'Account'; e = { $_.Properties[5].Value } },
+            @{n = 'Workstation'; e = { $_.Properties[13].Value } },
+            @{n = 'SourceIP'; e = { $_.Properties[19].Value } },
+            @{n = 'LogonType'; e = { $_.Properties[10].Value } } |
             Format-Table -AutoSize
     }
     catch {
