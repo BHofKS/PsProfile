@@ -1,6 +1,6 @@
 $PSDefaultParameterValues['Get-Help:full'] = $true
 
-$ProfileVersion = '2026081103'  # yyyymmdd##
+$ProfileVersion = '2026092900'  # yyyymmdd##
 
 $MasterUrl = 'https://raw.githubusercontent.com/BHofKS/PsProfile/main/windows_Microsoft.PowerShell_profile.ps1'
 
